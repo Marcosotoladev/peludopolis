@@ -1,12 +1,12 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Appointment } from "../../interfaces";
 import services from "../../servicesPets/services";
 import { useUser } from "../../../contexts/UserContext";
 
-const PaymentPage: React.FC = () => {
+const PaymentPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { userSession } = useUser();
@@ -195,6 +195,14 @@ const PaymentPage: React.FC = () => {
         </div>
       )}
     </div>
+  );
+};
+
+const PaymentPage: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <PaymentPageContent />
+    </Suspense>
   );
 };
 
