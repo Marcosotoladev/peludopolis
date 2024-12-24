@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #white;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  @apply text-black;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+.shake-on-hover:hover {
+  animation: shake 0.5s ease-in-out;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  height: 100%;
+  margin: 0; /* Sin márgenes extra */
+  display: flex;
+  flex-direction: column; /* Alineación vertical */
+}
+
+#__next {
+  display: flex;
+  flex-direction: column; /* Asegura que el footer esté en el flujo */
+  min-height: 100%; /* Ocupa toda la altura */
+}
+
+footer {
+  margin-top: auto; /* Empuja el footer al final */
+}
+
