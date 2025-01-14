@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Appointment } from "../../interfaces";
 import services from "../../servicesPets/services";
 import { useUser } from "../../../contexts/UserContext";
 import PaymentPopup from "../../../components/PaymentPopup/PaymentPopup";
 
-const PaymentPage: React.FC = () => {
+// Componente con la lógica principal
+const PaymentPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { userSession } = useUser(); // Recuperar datos del usuario logueado
+  const { userSession } = useUser();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
@@ -50,13 +51,13 @@ const PaymentPage: React.FC = () => {
   useEffect(() => {
     const status = searchParams.get("status");
     const paymentId = searchParams.get("id");
-    const externalRef = searchParams.get("external_reference"); // Recuperar el external_reference
+    const externalRef = searchParams.get("external_reference");
 
     if (status) {
       setPaymentStatus(status);
 
       if (status === "approved" && paymentId) {
-        handleSendAppointment(paymentId, externalRef); // Enviar cita con el paymentId y external_reference
+        handleSendAppointment(paymentId, externalRef);
       }
     }
   }, [searchParams]);
@@ -86,7 +87,7 @@ const PaymentPage: React.FC = () => {
             unit_price: service?.price || 0,
           };
         }),
-        external_reference: userSession?.user?.id || "",// Guardar el ID del usuario logueado
+        external_reference: userSession?.user?.id || "",
         back_urls: {
           success: `${localUrl}/appointments/payment?status=approved`,
           failure: `${localUrl}/appointments/payment?status=failure`,
@@ -94,8 +95,6 @@ const PaymentPage: React.FC = () => {
         },
         notification_url: `${backUrl}/payments/webhook`,
         auto_return: "approved",
-        // external_reference: {${'id'} agregar el id para enviarlo(ESTO YA SE HIZO)
-        // payments/external-reference/id(ESTO YA SE HIZO)
       };
 
       console.log("External Reference:", preference.external_reference);
@@ -136,7 +135,7 @@ const PaymentPage: React.FC = () => {
         date: appointments[0].date,
         namePet: appointments[0].petName,
         startTime: appointments[0].time,
-        user: externalRef || userSession.user.id, // Usar el external_reference recuperado
+        user: externalRef || userSession.user.id,
         services: appointments.map((appointment) => {
           const service = services.find((s) => s.name === appointment.service);
           return { id: service?.id };
@@ -224,6 +223,22 @@ const PaymentPage: React.FC = () => {
 
       {checkoutUrl && <PaymentPopup url={checkoutUrl} onClose={handlePaymentClose} />}
     </div>
+  );
+};
+
+// Componente de carga
+const Loading = () => (
+  <div className="container mx-auto px-4">
+    <p>Cargando...</p>
+  </div>
+);
+
+// Componente principal con Suspense
+const PaymentPage: React.FC = () => {
+  return (
+    <Suspense fallback={<Loading />}>
+      <PaymentPageContent />
+    </Suspense>
   );
 };
 
