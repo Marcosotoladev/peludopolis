@@ -178,7 +178,7 @@ const RegisterForm = () => {
 
       {/* Formulario de Registro */}
       <form
-        className="flex flex-col justify-center p-8 bg-white shadow-lg rounded-lg w-full max-w-md mx-auto lg:w-1/2 lg:max-w-none h-screen"
+        className=" flex flex-col justify-center p-8 bg-white shadow-lg rounded-lg w-full max-w-md mx-auto lg:w-1/2 lg:max-w-none h-screen"
         onSubmit={handleSubmit}
       >
         <h1 className="text-black text-2xl font-bold text-center mb-4">¡Crea tu cuenta en Peludópolis!</h1>
