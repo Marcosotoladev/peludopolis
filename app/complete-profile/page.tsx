@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+
 const CompleteProfileForm = () => {
     const router = useRouter();
     const [formData, setFormData] = useState({
@@ -51,7 +54,7 @@ const CompleteProfileForm = () => {
 
         try {
             // Registrar al usuario
-            const res = await fetch('http://localhost:3001/auth/signup', {
+            const res = await fetch(`${API_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(completeData),
@@ -62,7 +65,7 @@ const CompleteProfileForm = () => {
                 localStorage.setItem('user', JSON.stringify(data));
                 localStorage.removeItem('googleUser');
                 alert('Registro exitoso');
-                router.push('/dashboard');
+                router.push('/login');
             } else {
                 alert('Hubo un problema al completar tu registro. Inténtalo de nuevo.');
             }

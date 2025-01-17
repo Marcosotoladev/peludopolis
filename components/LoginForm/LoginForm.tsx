@@ -1,6 +1,5 @@
 "use client";
 
-import { GoogleLogin } from "@react-oauth/google";
 import { AuthContext } from "../../contexts/authContext";
 import { login } from "../../service/auth";
 import { useRouter } from "next/navigation";
@@ -9,209 +8,163 @@ import validator from "validator";
 import Image from "next/image";
 
 const LoginForm = () => {
-    const { setUser } = useContext(AuthContext);
-    const router = useRouter();
+  const { setUser } = useContext(AuthContext);
+  const router = useRouter();
 
-    const [data, setData] = useState({ email: "", password: "" });
-    const [errors, setErrors] = useState({ email: "", password: "" });
-    const [touched, setTouched] = useState({ email: false, password: false });
-    const [isLoginWithGoogle, setIsLoginWithGoogle] = useState(false);
+  const [data, setData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({ email: "", password: "" });
+  const [touched, setTouched] = useState({ email: false, password: false });
 
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-    
-        if (!data.email.trim() || !data.password.trim()) {
-            alert("Por favor complete todos los campos");
-            return;
-        }
-    
-        const res = await login(data); // Llama al servicio de login
-    
-        console.log("Respuesta del backend:", res); // Depura para verificar la respuesta
-    
-        if (res.statusCode) {
-            alert(res.message);
-        } else {
-            alert("Ingreso exitoso");
-    
-            // Guarda el token JWT en localStorage
-            if (res.accessToken) {
-                localStorage.setItem("userToken", res.accessToken); // Guardar el token correctamente
-            } else {
-                console.error("El token de acceso no está presente en la respuesta");
-            }
-    
-            // Guarda los datos del usuario en localStorage
-            localStorage.setItem("user", JSON.stringify({
-                user: res.user,
-                login: true,
-                id: res.user.id,
-                isAdmin: res.user.isAdmin,
-            }));
-    
-            // Actualiza el contexto
-            setUser({
-                user: res.user,
-                login: true,
-                id: res.user.id,
-                isAdmin: res.user.isAdmin || false,
-            });
-    
-            router.push("/");
-        }
-    };
-    
-    
+    if (!data.email.trim() || !data.password.trim()) {
+      alert("Por favor complete todos los campos");
+      return;
+    }
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
-        try {
-            const token = credentialResponse.credential;
-            const payload = JSON.parse(atob(token.split('.')[1]));
-    
-            // Llama al backend para verificar si el usuario ya existe
-            const checkRes = await fetch('http://localhost:3001/users/findByEmail/' + payload.email, {
-                method: 'GET',
-            });
-    
-            if (checkRes.ok) {
-                const { user, accessToken } = await checkRes.json();
-                // Guarda el token y redirige al dashboard
-                localStorage.setItem('user', JSON.stringify({ ...user, accessToken }));
-                router.push('/dashboard');
-                return;
-            }
-    
-            // Si el usuario no existe, guardar datos básicos y redirigir al formulario
-            localStorage.setItem('googleToken', token);
-            localStorage.setItem('googleUser', JSON.stringify({
-                name: payload.name,
-                email: payload.email,
-                picture: payload.picture,
-            }));
-            router.push('/complete-profile');
-        } catch (error) {
-            console.error('Error al procesar el token de Google:', error);
-            alert('Hubo un problema con el inicio de sesión. Inténtalo de nuevo.');
-        }
-    };
-    
-    
+    const res = await login(data); // Llama al servicio de login
 
-    const handleGoogleFailure = () => {
-        alert("Error al iniciar sesión con Google");
-    };
+    console.log("Respuesta del backend:", res); // Depura para verificar la respuesta
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setData({ ...data, [e.target.name]: e.target.value });
-    };
+    if (res.statusCode) {
+      alert(res.message);
+    } else {
+      alert("Ingreso exitoso");
 
-    const handleBlur = (e: ChangeEvent<HTMLInputElement>) => {
-        setTouched({ ...touched, [e.target.name]: true });
-    };
+      // Guarda el token JWT en localStorage
+      if (res.accessToken) {
+        localStorage.setItem("userToken", res.accessToken); // Guardar el token correctamente
+      } else {
+        console.error("El token de acceso no está presente en la respuesta");
+      }
 
-    const validateEmail = (e: string) => {
-        let validation = "";
-        if (!validator.isEmail(e)) validation = "Wrong email address";
-        return validation;
-    };
+      // Guarda los datos del usuario en localStorage
+      localStorage.setItem("user", JSON.stringify({
+        user: res.user,
+        login: true,
+        id: res.user.id,
+        isAdmin: res.user.isAdmin,
+        accessToken: res.accessToken, // Guardar el accessToken
+      }));
 
+      // Actualiza el contexto
+      setUser({
+        user: res.user,
+        login: true,
+        id: res.user.id,
+        isAdmin: res.user.isAdmin || false,
+        accessToken: res.accessToken, // Guardar el accessToken en el contexto
+      });
 
-    const validatePassword = (p: string) => {
-        let validation = "";
-        if (!validator.isLength(p, { min: 4, max: 8 })) validation = "Min 4, max 8";
-        return validation;
-    };
+      router.push("/dashboard");
+    }
+  };
 
-    useEffect(() => {
-        // Solo mostrar errores si el campo ha sido tocado
-        setErrors({
-            email: touched.email ? validateEmail(data.email) : "",
-            password: touched.password ? validatePassword(data.password) : "",
-        });
-    }, [data, touched]);
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setData({ ...data, [e.target.name]: e.target.value });
+  };
 
-    return (
-        <div className="flex items-center justify-center h-96 bg-gray-100">
-            <div className="relative w-1/2 h-full bg-primary hidden lg:flex items-center justify-center">
-                <Image
-                    src="/images/perro2.png"
-                    alt="Perro asomándose"
-                    width={300}
-                    height={400}
-                    className="absolute bottom-0 right-0 object-contain"
-                />
-            </div>
-            <form
-                className="flex flex-col justify-center p-8 bg-white shadow-lg rounded-lg w-full max-w-md mx-auto lg:w-1/2 lg:max-w-none"
-                onSubmit={handleSubmit}
-            >
-                <h1 className="text-2xl font-bold text-center mb-4">
-                    ¡Bienvenido a Peludópolis!
-                </h1>
-                <p className="text-center text-gray-600 mb-6">
-                    Inicia sesión con tu correo electrónico y contraseña o utiliza Google.
-                </p>
+  const handleBlur = (e: ChangeEvent<HTMLInputElement>) => {
+    setTouched({ ...touched, [e.target.name]: true });
+  };
 
-                {!isLoginWithGoogle ? (
-                    <>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                            Correo electrónico
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="tu@email.com"
-                            className="block w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring focus:ring-primary"
-                            onChange={handleChange}
-                            value={data.email}
-                            onBlur={handleBlur}
-                        />
-                        {touched.email && errors.email && (
-                            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                        )}
+  const validateEmail = (e: string) => {
+    let validation = "";
+    if (!validator.isEmail(e)) validation = "Wrong email address";
+    return validation;
+  };
 
-                        <label
-                            htmlFor="password"
-                            className="block text-sm font-medium text-gray-700 mt-4 mb-1"
-                        >
-                            Contraseña
-                        </label>
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="********"
-                            className="block w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring focus:ring-primary"
-                            onChange={handleChange}
-                            value={data.password}
-                            onBlur={handleBlur}
-                        />
-                        {touched.password && errors.password && (
-                            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-                        )}
+  const validatePassword = (p: string) => {
+    let validation = "";
+    if (!validator.isLength(p, { min: 4, max: 8 })) validation = "Min 4, max 8";
+    return validation;
+  };
 
-                        <button
-                            type="submit"
-                            className="mt-6 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark focus:outline-none"
-                            disabled={touched.email && touched.password && (!!errors.email || !!errors.password)}
-                        >
-                            Iniciar sesión
-                        </button>
-                    </>
-                ) : (
-                    <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleFailure} />
-                )}
+  useEffect(() => {
+    // Solo mostrar errores si el campo ha sido tocado
+    setErrors({
+      email: touched.email ? validateEmail(data.email) : "",
+      password: touched.password ? validatePassword(data.password) : "",
+    });
+  }, [data, touched]);
 
-                <button
-                    type="button"
-                    onClick={() => setIsLoginWithGoogle(!isLoginWithGoogle)}
-                    className="mt-4 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 focus:outline-none"
-                >
-                    {isLoginWithGoogle ? "Usar correo y contraseña" : "Iniciar sesión con Google"}
-                </button>
-            </form>
-        </div>
-    );
+  return (
+    <div className="flex items-center justify-center h-96 bg-gray-100">
+      <div className="relative w-1/2 h-full bg-primary hidden lg:flex items-center justify-center">
+        <Image
+          src="/images/perro2.png"
+          alt="Perro asomándose"
+          width={300}
+          height={400}
+          className="absolute bottom-0 right-0 object-contain"
+        />
+      </div>
+      <form
+        className="flex flex-col justify-center p-8 bg-white shadow-lg rounded-lg w-full max-w-md mx-auto lg:w-1/2 lg:max-w-none"
+        onSubmit={handleSubmit}
+      >
+        <h1 className="text-2xl font-bold text-center mb-4">
+          ¡Bienvenido a Peludópolis!
+        </h1>
+        <p className="text-center text-gray-600 mb-6">
+          Inicia sesión con tu correo electrónico y contraseña.
+        </p>
+
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          Correo electrónico
+        </label>
+        <input
+          type="email"
+          name="email"
+          placeholder="tu@email.com"
+          className="block w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring focus:ring-primary"
+          onChange={handleChange}
+          value={data.email}
+          onBlur={handleBlur}
+        />
+        {touched.email && errors.email && (
+          <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+        )}
+
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700 mt-4 mb-1"
+        >
+          Contraseña
+        </label>
+        <input
+          type="password"
+          name="password"
+          placeholder="********"
+          className="block w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring focus:ring-primary"
+          onChange={handleChange}
+          value={data.password}
+          onBlur={handleBlur}
+        />
+        {touched.password && errors.password && (
+          <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+        )}
+
+        <button
+          type="submit"
+          className="mt-6 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark focus:outline-none"
+          disabled={touched.email && touched.password && (!!errors.email || !!errors.password)}
+        >
+          Iniciar sesión
+        </button>
+
+        <p className="text-center text-gray-600 mt-6">
+          ¿Aún no tienes cuenta?{" "}
+          <a href="/register" className="text-primary font-bold">
+            Regístrate para ser parte de nuestra comunidad
+          </a>
+        </p>
+      </form>
+    </div>
+  );
 };
 
 export default LoginForm;
+
+
