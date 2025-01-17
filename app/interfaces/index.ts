@@ -88,3 +88,19 @@ export interface PaymentPopupProps {
   checkoutUrl: string;
   onClose: () => void;
 }
+
+export interface UserData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  address?: string; // Puedes agregar campos adicionales si es necesario
+  phone?: string;
+}
+
+""
+
+export interface UserLogin {
+  email: string;
+  password: string;
+}
