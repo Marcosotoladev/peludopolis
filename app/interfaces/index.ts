@@ -57,7 +57,7 @@ export interface UserSession {
 
 
 export interface Service {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
   price: number;
